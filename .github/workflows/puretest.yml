@@ -1,35 +1,49 @@
 name: Deploy website
+
 on:
   push:
     branches:
       - main
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - name: Get code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+
       - name: Install dependencies
         run: npm ci
+
       - name: Lint code
         run: npm run lint
+
       - name: Test code
         run: npm run test
+
   build:
     needs: test
     runs-on: ubuntu-latest
+
     outputs:
-      wohooscript: ${{steps.publish.outputs.wohooscript}}
+      wohooscript: ${{ steps.publish.outputs.wohooscript }}
+
     steps:
       - name: Get code
         uses: actions/checkout@v4
+
       - name: Install dependencies
         run: npm ci
+
       - name: Build website
         run: npm run build
+
       - name: Publish JS filename
         id: publish
-        run: find dist/assets/*.js -type f -execdir echo 'wohooscript={}' >> $GITHUB_OUTPUT ';'
+        run: |
+          SCRIPT_FILE=$(basename dist/assets/*.js)
+          echo "wohooscript=$SCRIPT_FILE" >> "$GITHUB_OUTPUT"
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -37,7 +51,7 @@ jobs:
           path: |
             dist
             package.json
-        
+
   deploy:
     needs: build
     runs-on: ubuntu-latest
@@ -46,9 +60,12 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: dist-files
-      - name: Output build files
-        run: ls 
-      - name: Output script file
-        run: echo "$ {{needs.build.outputs.wohooscript}}"
+
+      - name: Show downloaded files
+        run: ls -R
+
+      - name: Output script filename
+        run: echo "${{ needs.build.outputs.wohooscript }}"
+
       - name: Deploy
-        run: echo "Deploying..."
+        run: echo "Deploying ${{ needs.build.outputs.wohooscript }}
