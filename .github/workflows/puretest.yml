@@ -39,11 +39,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Cache dependecies
-        uses: actions/cache@4
+        uses: actions/cache@3
         with:
           path: ~/.npm
           key: deps-naode-modules-${{ hashFiles('**/package-lock.json') }}
-          
+
       - name: Install dependencies
         run: npm ci
 
